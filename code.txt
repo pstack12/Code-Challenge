@@ -141,3 +141,30 @@ std::pair<int, int> searchMultiContinuityWithinRange(float *data, int indexBegin
 	// return -1 to represent that the search was unsuccessful
 	return std::make_pair(-1,-1);
 }
+
+// being that this code is being written in C, we could use a simple 
+// data structure such as the following to store our swing data:
+struct SwingData {
+	int *timeStamp;
+	float *Ax;
+	float *Ay;
+	float *Az;
+	float *Wx;
+	float *Wy;
+	float *Wz;
+};
+
+// Then the functions above could be called as follows:
+int indexBegin = 100;
+int indexEnd = 1000;
+float threshold = 10.0;
+int winLength = 3;
+int first_index = searchContinuityAboveValue(swing_data.Ax, indexBegin, indexEnd, threshold, winLength);
+if (first_index == -1)
+{
+	// Failed to find 'winLength' conectutive samples above the threshold!
+}
+else
+{
+	// success!
+}
