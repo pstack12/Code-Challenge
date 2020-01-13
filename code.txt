@@ -106,9 +106,11 @@ int searchContinuityAboveValueTwoSignals(float *data1, float *data2, int indexBe
 	return -1;
 }
 
-std::pair<int, int> searchMultiContinuityWithinRange(float *data, int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
+std::vector<std::pair<int, int>> searchMultiContinuityWithinRange(float *data, int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
 {
 	// we would probably do some input validation here in production code!
+
+	std::vector<std::pair<int, int>> vecContinuities;
 
 	// loop from indexBegin to indexEnd-winLength
 	// if we get within winLength samples from indexEnd, we no longer need to search
@@ -129,17 +131,19 @@ std::pair<int, int> searchMultiContinuityWithinRange(float *data, int indexBegin
 		//count the number of consectutive samples within the range of interest
 		while (i <= indexEnd && data[i] > thresholdLo && data[i] < thresholdHi) {
 			count++;
-			if (count >= winLength) {
-				// Success: We can return the start index and the current index since we have
-				// counted the required number of samples
-				return std::make_pair(start_index, i);
-			}
 			i++;
+		}
+
+		//if the continuity is long enough, then add it to our collection
+		if (count >= winLength) {
+			// Success: We can return the start index and the current index since we have
+			// counted the required number of samples
+			vecContinuities.push_back(std::make_pair(start_index, i-1));
 		}
 	}
 
-	// return -1 to represent that the search was unsuccessful
-	return std::make_pair(-1,-1);
+	// return any continuities that have been found
+	return vecContinuities;
 }
 
 // being that this code is being written in C, we could use a simple 
