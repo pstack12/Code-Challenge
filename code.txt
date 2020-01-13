@@ -1,0 +1,143 @@
+int searchContinuityAboveValue(float *data, int indexBegin, int indexEnd, float threshold, int winLength)
+{
+	// we would probably do some input validation here in production code!
+
+	// loop from indexBegin to indexEnd-winLength
+	// if we get within winLength samples from indexEnd, we no longer need to search
+	int i = indexBegin;
+	while (i <= indexEnd-winLength)
+	{
+		// loop while the current sample is less than or equal to the input threshold value
+		while (i <= indexEnd-winLength && data[i] <= threshold) {
+			i++;
+		}
+
+		//initialize the counter
+		int count = 0;
+
+		// store the index of the first sample greater than the input threshold
+		int start_index = i;
+
+		//count the number of consectutive samples above the threshold
+		while (i <= indexEnd && data[i] > threshold) {
+			count++;
+			if (count >= winLength) {
+				// Success: We can return the start index since we have
+				// counted the required number of samples
+				return start_index;
+			}
+			i++;
+		}
+	}
+
+	// return -1 to represent that the search was unsuccessful
+	return -1;
+}
+
+int backSearchContinuityWithinRange(float *data, int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
+{
+	// we would probably do some input validation here in production code!
+
+	// loop from indexBegin to indexEnd+winLength
+	// if we get within winLength samples from indexEnd, we no longer need to search
+	int i = indexBegin;
+	while (i >= indexEnd+winLength)
+	{
+		// loop while the current sample is outside the range of interest
+		while (i >= indexEnd+winLength && (data[i] <= thresholdLo || data[i] >= thresholdHi)) {
+			i--;
+		}
+
+		//initialize the counter
+		int count = 0;
+
+		// store the index of the first sample within the range of interest
+		int start_index = i;
+
+		//count the number of consectutive samples within the range of interest
+		while (i >= indexEnd && data[i] > thresholdLo && data[i] < thresholdHi) {
+			count++;
+			if (count >= winLength) {
+				// Success: We can return the start index since we have
+				// counted the required number of samples
+				return start_index;
+			}
+			i--;
+		}
+	}
+
+	// return -1 to represent that the search was unsuccessful
+	return -1;
+}
+
+int searchContinuityAboveValueTwoSignals(float *data1, float *data2, int indexBegin, int indexEnd, float threshold1, float threshold2, int winLength)
+{
+	// we would probably do some input validation here in production code!
+
+	// loop from indexBegin to indexEnd-winLength
+	// if we get within winLength samples from indexEnd, we no longer need to search
+	int i = indexBegin;
+	while (i <= indexEnd-winLength)
+	{
+		// loop while the current sample of data1 or data2 is less than or equal to the input threshold value
+		while (i <= indexEnd-winLength && (data1[i] <= threshold1 || data2[i] <= threshold2)) {
+			i++;
+		}
+
+		//initialize the counter
+		int count = 0;
+
+		// store the index of the first sample greater than the input threshold
+		int start_index = i;
+
+		//count the number of consectutive samples above the threshold in both data sets
+		while (i <= indexEnd && data1[i] > threshold1 && data2[i] > threshold2) {
+			count++;
+			if (count >= winLength) {
+				// Success: We can return the start index since we have
+				// counted the required number of samples
+				return start_index;
+			}
+			i++;
+		}
+	}
+
+	// return -1 to represent that the search was unsuccessful
+	return -1;
+}
+
+std::pair<int, int> searchMultiContinuityWithinRange(float *data, int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
+{
+	// we would probably do some input validation here in production code!
+
+	// loop from indexBegin to indexEnd-winLength
+	// if we get within winLength samples from indexEnd, we no longer need to search
+	int i = indexBegin;
+	while (i <= indexEnd-winLength)
+	{
+		// loop while the current sample is outside the range of interest
+		while (i <= indexEnd-winLength && (data[i] <= thresholdLo || data[i] >= thresholdHi)) {
+			i++;
+		}
+
+		//initialize the counter
+		int count = 0;
+
+		// store the index of the first sample within the range of interest
+		int start_index = i;
+
+		//count the number of consectutive samples within the range of interest
+		while (i <= indexEnd && data[i] > thresholdLo && data[i] < thresholdHi) {
+			count++;
+			if (count >= winLength) {
+				// Success: We can return the start index and the current index since we have
+				// counted the required number of samples
+				return std::make_pair(start_index, i);
+			}
+			i++;
+		}
+	}
+
+	// return -1 to represent that the search was unsuccessful
+	return std::make_pair(-1,-1);
+}
