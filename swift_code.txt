@@ -1,7 +1,12 @@
+// struct to hold a continuity pair
 struct ContinuityPair {
     var first: Int = -1
     var second: Int = -1
 }
+
+//////////////////////
+// Helper functions //
+//////////////////////
 
 func findNextSampleWithinRange(data1: [Float], data2: [Float], currentIndex: Int, lastIndex: Int, 
     thresholdLo1: Float, thresholdHi1: Float, thresholdLo2: Float, thresholdHi2: Float) -> Int
@@ -98,6 +103,10 @@ func performContinuitySearch(data1: [Float], data2: [Float], indexBegin: Int, in
 	return vContinuities
 }
 
+//////////////////////
+// Public functions //
+//////////////////////
+
 func searchContinuityAboveValue(data: [Float], indexBegin: Int, indexEnd: Int, threshold: Float, winLength: Int) -> Int
 {
     if (winLength < 1) {
@@ -167,6 +176,10 @@ func searchMultiContinuityWithinRange(data: [Float], indexBegin: Int, indexEnd: 
 	return performContinuitySearch(data1: data, data2: data2, indexBegin: indexBegin, indexEnd: indexEnd, 
 	    thresholdLo1: thresholdLo, thresholdHi1: thresholdHi, thresholdLo2: 0.0, thresholdHi2: 0.0, winLength: winLength);
 }
+
+///////////////////
+// Test function //
+///////////////////
 
 func test() 
 {
