@@ -1,112 +1,64 @@
-int searchContinuityAboveValue(float *data, int indexBegin, int indexEnd, float threshold, int winLength)
+int findNextSampleWithinRange(float *data1, float *data2,
+	int current_index, int last_index,
+	float thresholdLo1, float thresholdHi1,
+	float thresholdLo2, float thresholdHi2)
 {
-	// we would probably do some input validation here in production code!
-
-	// loop from indexBegin to indexEnd-winLength
-	// if we get within winLength samples from indexEnd, we no longer need to search
-	int i = indexBegin;
-	while (i <= indexEnd-winLength)
+	if (data2)
 	{
-		// loop while the current sample is less than or equal to the input threshold value
-		while (i <= indexEnd-winLength && data[i] <= threshold) {
-			i++;
-		}
-
-		//initialize the counter
-		int count = 0;
-
-		// store the index of the first sample greater than the input threshold
-		int start_index = i;
-
-		//count the number of consectutive samples above the threshold
-		while (i <= indexEnd && data[i] > threshold) {
-			count++;
-			if (count >= winLength) {
-				// Success: We can return the start index since we have
-				// counted the required number of samples
-				return start_index;
-			}
-			i++;
+		// loop while the current sample of either data1 or data2 is outside the range of interest
+		while (current_index <= last_index &&
+			((data1[current_index] <= thresholdLo1 || data1[current_index] >= thresholdHi1) ||
+			 (data2[current_index] <= thresholdLo2 || data2[current_index] >= thresholdHi2)))
+		{
+			current_index++;
 		}
 	}
-
-	// return -1 to represent that the search was unsuccessful
-	return -1;
-}
-
-int backSearchContinuityWithinRange(float *data, int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
-{
-	// we would probably do some input validation here in production code!
-
-	// loop from indexBegin to indexEnd+winLength
-	// if we get within winLength samples from indexEnd, we no longer need to search
-	int i = indexBegin;
-	while (i >= indexEnd+winLength)
+	else
 	{
 		// loop while the current sample is outside the range of interest
-		while (i >= indexEnd+winLength && (data[i] <= thresholdLo || data[i] >= thresholdHi)) {
-			i--;
-		}
-
-		//initialize the counter
-		int count = 0;
-
-		// store the index of the first sample within the range of interest
-		int start_index = i;
-
-		//count the number of consectutive samples within the range of interest
-		while (i >= indexEnd && data[i] > thresholdLo && data[i] < thresholdHi) {
-			count++;
-			if (count >= winLength) {
-				// Success: We can return the start index since we have
-				// counted the required number of samples
-				return start_index;
-			}
-			i--;
+		while (current_index <= last_index &&
+			(data1[current_index] <= thresholdLo1 || data1[current_index] >= thresholdHi1))
+		{
+			current_index++;
 		}
 	}
 
-	// return -1 to represent that the search was unsuccessful
-	return -1;
+	return current_index;
 }
 
-int searchContinuityAboveValueTwoSignals(float *data1, float *data2, int indexBegin, int indexEnd, float threshold1, float threshold2, int winLength)
+int findNextSampleOutsideRange(float *data1, float *data2,
+	int current_index, int last_index,
+	float thresholdLo1, float thresholdHi1,
+	float thresholdLo2, float thresholdHi2)
 {
-	// we would probably do some input validation here in production code!
-
-	// loop from indexBegin to indexEnd-winLength
-	// if we get within winLength samples from indexEnd, we no longer need to search
-	int i = indexBegin;
-	while (i <= indexEnd-winLength)
+	if (data2)
 	{
-		// loop while the current sample of data1 or data2 is less than or equal to the input threshold value
-		while (i <= indexEnd-winLength && (data1[i] <= threshold1 || data2[i] <= threshold2)) {
-			i++;
+		// loop while the current sample of either data1 and data2 is within the range of interest
+		while (current_index <= last_index &&
+			data1[current_index] > thresholdLo1 && data1[current_index] < thresholdHi1 &&
+			data2[current_index] > thresholdLo2 && data2[current_index] < thresholdHi2)
+		{
+			current_index++;
 		}
-
-		//initialize the counter
-		int count = 0;
-
-		// store the index of the first sample greater than the input threshold
-		int start_index = i;
-
-		//count the number of consectutive samples above the threshold in both data sets
-		while (i <= indexEnd && data1[i] > threshold1 && data2[i] > threshold2) {
-			count++;
-			if (count >= winLength) {
-				// Success: We can return the start index since we have
-				// counted the required number of samples
-				return start_index;
-			}
-			i++;
+	}
+	else
+	{
+		// loop while the current sample is within the range of interest
+		while (current_index <= last_index &&
+			data1[current_index] > thresholdLo1 && data1[current_index] < thresholdHi1)
+		{
+			current_index++;
 		}
 	}
 
-	// return -1 to represent that the search was unsuccessful
-	return -1;
+	return current_index;
 }
 
-std::vector<std::pair<int, int>> searchMultiContinuityWithinRange(float *data, int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
+std::vector<std::pair<int,int>> performContinuitySearch(float *data1, float *data2,
+	int indexBegin, int indexEnd,
+	float thresholdLo1, float thresholdHi1,
+	float thresholdLo2, float thresholdHi2,
+	int winLength)
 {
 	// we would probably do some input validation here in production code!
 
@@ -117,25 +69,19 @@ std::vector<std::pair<int, int>> searchMultiContinuityWithinRange(float *data, i
 	int i = indexBegin;
 	while (i <= indexEnd-winLength)
 	{
-		// loop while the current sample is outside the range of interest
-		while (i <= indexEnd-winLength && (data[i] <= thresholdLo || data[i] >= thresholdHi)) {
-			i++;
-		}
-
-		//initialize the counter
-		int count = 0;
+		i = findNextSampleWithinRange(data1, data2, i, indexEnd-winLength,
+			thresholdLo1, thresholdHi1, thresholdLo2, thresholdHi2);
 
 		// store the index of the first sample within the range of interest
 		int start_index = i;
+		i = findNextSampleOutsideRange(data1, data2, i, indexEnd,
+			thresholdLo1, thresholdHi1, thresholdLo2, thresholdHi2);
 
-		//count the number of consectutive samples within the range of interest
-		while (i <= indexEnd && data[i] > thresholdLo && data[i] < thresholdHi) {
-			count++;
-			i++;
-		}
+		// compute the number of consecutive samples within the range of interest
+		int length_of_continuity = i-start_index+1;
 
-		//if the continuity is long enough, then add it to our collection
-		if (count >= winLength) {
+		// if the continuity is long enough, then add it to our collection
+		if (length_of_continuity >= winLength) {
 			// Success: We can return the start index and the current index since we have
 			// counted the required number of samples
 			vecContinuities.push_back(std::make_pair(start_index, i-1));
@@ -144,6 +90,57 @@ std::vector<std::pair<int, int>> searchMultiContinuityWithinRange(float *data, i
 
 	// return any continuities that have been found
 	return vecContinuities;
+}
+
+int searchContinuityAboveValue(float *data, int indexBegin, int indexEnd, float threshold, int winLength)
+{
+	std::vector<std::pair<int,int>> vecContinuities =
+		performContinuitySearch(data, NULL, indexBegin, indexEnd,
+		threshold, std::numeric_limits<double>::infinity(),
+		0.0, 0.0, winLength);
+
+	if (vecContinuities.empty())
+		return -1;
+
+	std::pair<int,int> pair = vecContinuities[0];
+	return pair.first;
+}
+
+int backSearchContinuityWithinRange(float *data, int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
+{
+	// swapped indexBegin and indexEnd indices because search is backward (indexBegin > indexEnd)
+	std::vector<std::pair<int,int>> vecContinuities =
+		performContinuitySearch(data, NULL, indexEnd, indexBegin,
+		thresholdLo, thresholdHi,
+		0.0, 0.0, winLength);
+
+	if (vecContinuities.empty())
+		return -1;
+
+	// return second index of last continuity pair
+	std::pair<int,int> pair = vecContinuities.back();
+	return pair.second;
+}
+
+int searchContinuityAboveValueTwoSignals(float *data1, float *data2, int indexBegin, int indexEnd, float threshold1, float threshold2, int winLength)
+{
+	std::vector<std::pair<int,int>> vecContinuities =
+		performContinuitySearch(data1, data2, indexBegin, indexEnd,
+		threshold1, std::numeric_limits<double>::infinity(),
+		threshold2, std::numeric_limits<double>::infinity(), winLength);
+
+	if (vecContinuities.empty())
+		return -1;
+
+	std::pair<int,int> pair = vecContinuities[0];
+	return pair.first;
+}
+
+std::vector<std::pair<int, int>> searchMultiContinuityWithinRange(float *data,
+	int indexBegin, int indexEnd, float thresholdLo, float thresholdHi, int winLength)
+{
+	return performContinuitySearch(data, NULL, indexBegin, indexEnd,
+		thresholdLo, thresholdHi, 0.0, 0.0, winLength);
 }
 
 // being that this code is being written in C, we could use a simple 
