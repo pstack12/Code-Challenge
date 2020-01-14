@@ -1,0 +1,148 @@
+
+struct ContinuityPair {
+    var first: Int = -1
+    var second: Int = -1
+}
+
+func findNextSampleWithinRange(data1: [Float], data2: [Float], current_index: Int, last_index: Int, thresholdLo1: Float, thresholdHi1: Float, thresholdLo2: Float, thresholdHi2: Float) -> Int
+{
+    var start_index = current_index;
+    
+	if (!data2.isEmpty)
+	{
+		// loop while the current sample of either data1 or data2 is outside the range of interest
+		while (current_index <= last_index &&
+			((data1[current_index] <= thresholdLo1 || data1[current_index] >= thresholdHi1) ||
+			 (data2[current_index] <= thresholdLo2 || data2[current_index] >= thresholdHi2)))
+		{
+			start_index += 1
+		}
+	}
+	else
+	{
+		// loop while the current sample is outside the range of interest
+		while (current_index <= last_index &&
+			(data1[current_index] <= thresholdLo1 || data1[current_index] >= thresholdHi1))
+		{
+			start_index += 1
+		}
+	}
+
+	return start_index
+}
+
+func findNextSampleOutsideRange(data1: [Float], data2: [Float], current_index: Int, last_index: Int, thresholdLo1: Float, thresholdHi1: Float, thresholdLo2: Float, thresholdHi2: Float) -> Int
+{
+	var start_index = current_index;
+	
+	if (!data2.isEmpty)
+	{
+		// loop while the current sample of either data1 and data2 is within the range of interest
+		while (current_index <= last_index &&
+			data1[current_index] > thresholdLo1 && data1[current_index] < thresholdHi1 &&
+			data2[current_index] > thresholdLo2 && data2[current_index] < thresholdHi2)
+		{
+			start_index += 1
+		}
+	}
+	else
+	{
+		// loop while the current sample is within the range of interest
+		while (current_index <= last_index &&
+			data1[current_index] > thresholdLo1 && data1[current_index] < thresholdHi1)
+		{
+			start_index += 1
+		}
+	}
+
+	return start_index
+}
+
+func performContinuitySearch(data1: [Float], data2: [Float], indexBegin: Int, indexEnd: Int, thresholdLo1: Float, thresholdHi1: Float, thresholdLo2: Float, thresholdHi2: Float, winLength: Int) -> [ContinuityPair]
+{
+	// we would probably do some input validation here in production code!
+
+	var vContinuities: [ContinuityPair] = []
+
+	// loop from indexBegin to indexEnd-winLength
+	// if we get within winLength samples from indexEnd, we no longer need to search
+	var i = indexBegin
+	while (i <= indexEnd-winLength)
+	{
+		i = findNextSampleWithinRange(data1: data1, data2: data2, current_index: i, last_index: indexEnd-winLength,
+			thresholdLo1: thresholdLo1, thresholdHi1: thresholdHi1, thresholdLo2: thresholdLo2, thresholdHi2: thresholdHi2)
+
+		// store the index of the first sample within the range of interest
+		let start_index = i
+		i = findNextSampleOutsideRange(data1: data1, data2: data2, current_index: i, last_index: indexEnd,
+			thresholdLo1: thresholdLo1, thresholdHi1: thresholdHi1, thresholdLo2: thresholdLo2, thresholdHi2: thresholdHi2)
+
+		// compute the number of consecutive samples within the range of interest
+		let length_of_continuity = i-start_index+1
+
+		// if the continuity is long enough, then add it to our collection
+		if (length_of_continuity >= winLength) {
+			// Success: We can return the start index and the current index since we have
+			// counted the required number of samples
+			var pair: ContinuityPair = ContinuityPair()
+			pair.first = start_index
+			pair.second = i-1
+			vContinuities.append(pair)
+		}
+	}
+
+	// return any continuities that have been found
+	return vContinuities
+}
+
+func searchContinuityAboveValue(data1: [Float], indexBegin: Int, indexEnd: Int, threshold: Float, winLength: Int) -> Int
+{
+	let data2: [Float] = []
+	
+	let vContinuities = performContinuitySearch(data1: data1, data2: data2, indexBegin: indexBegin, indexEnd: indexEnd, 
+	    thresholdLo1: threshold, thresholdHi1: Float.infinity, thresholdLo2: 0.0, thresholdHi2: 0.0, winLength: winLength)
+
+	if (vContinuities.isEmpty) {
+		return -1
+    }
+    
+	let pair: ContinuityPair = vContinuities[0]
+	return pair.first
+}
+
+func backSearchContinuityWithinRange(data1: [Float], indexBegin: Int, indexEnd: Int, thresholdLo: Float, thresholdHi: Float, winLength: Int) -> Int
+{
+	let data2: [Float] = []
+	
+	// swapped indexBegin and indexEnd indices because search is backward (indexBegin > indexEnd)
+	let vContinuities = performContinuitySearch(data1: data1, data2: data2, indexBegin: indexEnd, indexEnd: indexBegin, 
+	    thresholdLo1: thresholdLo, thresholdHi1: thresholdHi, thresholdLo2: 0.0, thresholdHi2: 0.0, winLength: winLength)
+	
+	if (vContinuities.isEmpty) {
+		return -1
+    }
+    
+	// return second index of last continuity pair
+	let pair: ContinuityPair = vContinuities[vContinuities.count-1]
+	return pair.second
+}
+
+func searchContinuityAboveValueTwoSignals(data1: [Float], data2: [Float], indexBegin: Int, indexEnd: Int, threshold1: Float, threshold2: Float, winLength: Int) -> Int
+{
+	let vContinuities = performContinuitySearch(data1: data1, data2: data2, indexBegin: indexBegin, indexEnd: indexEnd, 
+	    thresholdLo1: threshold1, thresholdHi1: Float.infinity, thresholdLo2: threshold2, thresholdHi2: Float.infinity, winLength: winLength)
+
+	if (vContinuities.isEmpty) {
+		return -1
+	}
+
+	let pair: ContinuityPair = vContinuities[0]
+	return pair.first
+}
+
+func searchMultiContinuityWithinRange(data: [Float], indexBegin: Int, indexEnd: Int, thresholdLo: Float, thresholdHi: Float, winLength: Int) -> [ContinuityPair]
+{
+    let data2: [Float] = []
+    
+	return performContinuitySearch(data1: data, data2: data2, indexBegin: indexBegin, indexEnd: indexEnd, thresholdLo1: thresholdLo, thresholdHi1: thresholdHi, thresholdLo2: 0.0, thresholdHi2: 0.0, winLength: winLength);
+}
